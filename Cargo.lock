@@ -1515,6 +1515,7 @@ dependencies = [
  "embassy-rp",
  "embassy-time",
  "embedded-alloc",
+ "embedded-io",
  "heapless 0.9.3",
  "icm426xx",
  "panic-probe",
