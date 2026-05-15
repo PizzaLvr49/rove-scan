@@ -65,19 +65,19 @@ async fn main(spawner: Spawner) {
         dma::Channel::new(p.DMA_CH0, Irqs),
     );
 
-    let fw = unsafe {
-        mem::transmute::<&[u8], &Aligned<cyw43::A4, [u8]>>(cyw43_firmware::CYW43_43439A0)
-    };
+    let fw = cyw43::aligned_bytes!("../firmware/43439A0_btfw.bin");
 
-    let clm = unsafe {
-        mem::transmute::<&[u8], &Aligned<cyw43::A4, [u8]>>(cyw43_firmware::CYW43_43439A0_CLM)
-    };
+    let nvram = cyw43::aligned_bytes!("../firmware/43439A0_nvram.bin");
 
     let state = STATE.init(cyw43::State::new());
 
-    let (_, _, runner) = cyw43::new(state, pwr, spi, fw, clm).await;
+    let (_device, mut control, runner) = cyw43::new(state, pwr, spi, fw, nvram).await;
 
     spawner.spawn(wifi_task(runner).unwrap());
+
+    control
+        .init(include_bytes!("../firmware/43439A0_clm.bin"))
+        .await;
 
     let mut i = 0;
 
