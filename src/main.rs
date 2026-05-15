@@ -1,8 +1,9 @@
-#![allow(static_mut_refs)]
 #![no_std]
 #![no_main]
 
 extern crate alloc;
+
+use core::mem;
 
 use defmt::*;
 use defmt_rtt as _;
@@ -18,23 +19,13 @@ use embassy_rp::{
 use embassy_time::{Duration, Timer};
 use static_cell::StaticCell;
 
-use embedded_alloc::LlffHeap as Heap;
+use embedded_alloc::TlsfHeap as Heap;
 
-use cyw43::SpiBus;
+use cyw43::{Aligned, SpiBus};
 use cyw43_pio::{DEFAULT_CLOCK_DIVIDER, PioSpi};
 
 #[global_allocator]
-static ALLOCATOR: Heap = Heap::empty();
-
-const HEAP_SIZE: usize = 64 * 1024;
-
-static mut HEAP_MEM: [u8; HEAP_SIZE] = [0; HEAP_SIZE];
-
-fn init_heap() {
-    unsafe {
-        ALLOCATOR.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE);
-    }
-}
+static HEAP: Heap = Heap::empty();
 
 bind_interrupts!(struct Irqs {
     PIO0_IRQ_0 => InterruptHandler<PIO0>;
@@ -52,7 +43,9 @@ async fn wifi_task(
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
-    init_heap();
+    unsafe {
+        embedded_alloc::init!(HEAP, 128 * 1024);
+    }
 
     let p = embassy_rp::init(Default::default());
 
@@ -73,15 +66,11 @@ async fn main(spawner: Spawner) {
     );
 
     let fw = unsafe {
-        core::mem::transmute::<&[u8], &cyw43::Aligned<cyw43::A4, [u8]>>(
-            cyw43_firmware::CYW43_43439A0,
-        )
+        mem::transmute::<&[u8], &Aligned<cyw43::A4, [u8]>>(cyw43_firmware::CYW43_43439A0)
     };
 
     let clm = unsafe {
-        core::mem::transmute::<&[u8], &cyw43::Aligned<cyw43::A4, [u8]>>(
-            cyw43_firmware::CYW43_43439A0_CLM,
-        )
+        mem::transmute::<&[u8], &Aligned<cyw43::A4, [u8]>>(cyw43_firmware::CYW43_43439A0_CLM)
     };
 
     let state = STATE.init(cyw43::State::new());
