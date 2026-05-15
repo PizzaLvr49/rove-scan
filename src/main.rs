@@ -3,8 +3,6 @@
 
 extern crate alloc;
 
-use core::mem;
-
 use defmt::*;
 use defmt_rtt as _;
 use panic_probe as _;
@@ -21,7 +19,7 @@ use static_cell::StaticCell;
 
 use embedded_alloc::TlsfHeap as Heap;
 
-use cyw43::{Aligned, SpiBus};
+use cyw43::{SpiBus, aligned_bytes};
 use cyw43_pio::{DEFAULT_CLOCK_DIVIDER, PioSpi};
 
 #[global_allocator]
@@ -65,9 +63,9 @@ async fn main(spawner: Spawner) {
         dma::Channel::new(p.DMA_CH0, Irqs),
     );
 
-    let fw = cyw43::aligned_bytes!("../firmware/43439A0_btfw.bin");
+    let fw = aligned_bytes!("../firmware/43439A0_btfw.bin");
 
-    let nvram = cyw43::aligned_bytes!("../firmware/43439A0_nvram.bin");
+    let nvram = aligned_bytes!("../firmware/43439A0_nvram.bin");
 
     let state = STATE.init(cyw43::State::new());
 
