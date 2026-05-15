@@ -1,18 +1,18 @@
+#![allow(static_mut_refs)]
 #![no_std]
 #![no_main]
 
 extern crate alloc;
 
-use core::mem::MaybeUninit;
 use defmt::*;
 use defmt_rtt as _;
 use panic_probe as _;
 
 use embassy_executor::Spawner;
 use embassy_rp::{
-    bind_interrupts,
+    bind_interrupts, dma,
     gpio::{Level, Output},
-    peripherals::PIO0,
+    peripherals::{DMA_CH0, PIO0},
     pio::InterruptHandler,
 };
 use embassy_time::{Duration, Timer};
@@ -27,16 +27,18 @@ use cyw43_pio::{DEFAULT_CLOCK_DIVIDER, PioSpi};
 static ALLOCATOR: Heap = Heap::empty();
 
 const HEAP_SIZE: usize = 64 * 1024;
-static mut HEAP_MEM: [MaybeUninit<u8>; HEAP_SIZE] = [MaybeUninit::uninit(); HEAP_SIZE];
+
+static mut HEAP_MEM: [u8; HEAP_SIZE] = [0; HEAP_SIZE];
 
 fn init_heap() {
     unsafe {
-        ALLOCATOR.init(core::ptr::addr_of_mut!(HEAP_MEM) as usize, HEAP_SIZE);
+        ALLOCATOR.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE);
     }
 }
 
 bind_interrupts!(struct Irqs {
     PIO0_IRQ_0 => InterruptHandler<PIO0>;
+    DMA_IRQ_0 => dma::InterruptHandler<DMA_CH0>;
 });
 
 static STATE: StaticCell<cyw43::State> = StaticCell::new();
@@ -67,19 +69,28 @@ async fn main(spawner: Spawner) {
         cs,
         p.PIN_24,
         p.PIN_29,
-        p.DMA_CH0,
+        dma::Channel::new(p.DMA_CH0, Irqs),
     );
 
-    let fw = cyw43_firmware::FIRMWARE;
-    let clm = cyw43_firmware::CLM;
+    let fw = unsafe {
+        core::mem::transmute::<&[u8], &cyw43::Aligned<cyw43::A4, [u8]>>(
+            cyw43_firmware::CYW43_43439A0,
+        )
+    };
+
+    let clm = unsafe {
+        core::mem::transmute::<&[u8], &cyw43::Aligned<cyw43::A4, [u8]>>(
+            cyw43_firmware::CYW43_43439A0_CLM,
+        )
+    };
 
     let state = STATE.init(cyw43::State::new());
 
-    let (_net_device, _control, runner) = cyw43::new(state, pwr, spi, fw, clm).await;
+    let (_, _, runner) = cyw43::new(state, pwr, spi, fw, clm).await;
 
     spawner.spawn(wifi_task(runner).unwrap());
 
-    let mut i = 0u32;
+    let mut i = 0;
 
     loop {
         Timer::after(Duration::from_secs(1)).await;
