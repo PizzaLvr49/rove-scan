@@ -22,24 +22,37 @@ embassy-net = { version = "0.9.1", features = [
     "proto-ipv4",
     "dns",
     "defmt",
+    "auto-icmp-echo-reply",
 ] }
 embassy-rp = { version = "0.10.0", features = [
     "critical-section-impl",
     "defmt",
     "rp235xa",
     "time-driver",
+    "imagedef-nonsecure-exe",
 ] }
 embassy-time = { version = "0.5.1", features = [
     "defmt",
     "defmt-timestamp-uptime",
 ] }
 embedded-alloc = "0.7.0"
-embedded-io = { version = "0.7.1", features = ["alloc", "defmt"] }
-heapless = { version = "0.9.3", features = ["alloc", "defmt"] }
+embedded-io-async = { version = "0.7.0", features = ["defmt"] }
+heapless = { version = "0.9.3", features = [
+    "alloc",
+    "defmt",
+    "embedded-io-v0.7",
+] }
 icm426xx = { version = "0.4.0", features = ["async", "defmt"] }
 panic-probe = { version = "1.0.0", features = ["print-defmt"] }
 portable-atomic = { version = "1.13.1", features = ["critical-section"] }
-postcard = { version = "1.1.3", features = ["defmt"] }
+postcard = { version = "1.1.3", default-features = false, features = [
+    "defmt",
+    "alloc",
+] }
+serde = { version = "1.0.228", features = [
+    "derive",
+    "alloc",
+], default-features = false }
 static_cell = "2.1.1"
 vl53l1x-uld = "2.0.1"
 
