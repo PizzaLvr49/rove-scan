@@ -9,10 +9,11 @@ use panic_probe as _;
 
 use embassy_executor::Spawner;
 use embassy_rp::{
-    bind_interrupts, dma,
+    bind_interrupts,
+    dma::{self, Channel as DmaChannel},
     gpio::{Level, Output},
     peripherals::{DMA_CH0, PIO0},
-    pio::InterruptHandler,
+    pio::{InterruptHandler, Pio},
 };
 use embassy_time::{Duration, Timer};
 use static_cell::StaticCell;
@@ -50,7 +51,7 @@ async fn main(spawner: Spawner) {
     let pwr = Output::new(p.PIN_23, Level::Low);
     let cs = Output::new(p.PIN_25, Level::High);
 
-    let mut pio = embassy_rp::pio::Pio::new(p.PIO0, Irqs);
+    let mut pio = Pio::new(p.PIO0, Irqs);
 
     let spi = PioSpi::new(
         &mut pio.common,
@@ -60,10 +61,10 @@ async fn main(spawner: Spawner) {
         cs,
         p.PIN_24,
         p.PIN_29,
-        dma::Channel::new(p.DMA_CH0, Irqs),
+        DmaChannel::new(p.DMA_CH0, Irqs),
     );
 
-    let fw = aligned_bytes!("../firmware/43439A0_btfw.bin");
+    let fw = aligned_bytes!("../firmware/43439A0.bin");
 
     let nvram = aligned_bytes!("../firmware/43439A0_nvram.bin");
 
