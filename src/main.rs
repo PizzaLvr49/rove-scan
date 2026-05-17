@@ -9,11 +9,10 @@ use panic_probe as _;
 
 use embassy_executor::Spawner;
 use embassy_rp::{
-    bind_interrupts,
-    dma::{self, Channel as DmaChannel},
+    bind_interrupts, dma,
     gpio::{Level, Output},
     peripherals::{DMA_CH0, PIO0},
-    pio::{InterruptHandler, Pio},
+    pio::{self, Pio},
 };
 use embassy_time::{Duration, Timer};
 use static_cell::StaticCell;
@@ -27,7 +26,7 @@ use cyw43_pio::{DEFAULT_CLOCK_DIVIDER, PioSpi};
 static HEAP: Heap = Heap::empty();
 
 bind_interrupts!(struct Irqs {
-    PIO0_IRQ_0 => InterruptHandler<PIO0>;
+    PIO0_IRQ_0 => pio::InterruptHandler<PIO0>;
     DMA_IRQ_0 => dma::InterruptHandler<DMA_CH0>;
 });
 
@@ -61,7 +60,7 @@ async fn main(spawner: Spawner) {
         cs,
         p.PIN_24,
         p.PIN_29,
-        DmaChannel::new(p.DMA_CH0, Irqs),
+        dma::Channel::new(p.DMA_CH0, Irqs),
     );
 
     let fw = aligned_bytes!("../firmware/43439A0.bin");
