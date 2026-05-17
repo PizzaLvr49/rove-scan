@@ -17,13 +17,8 @@ use embassy_rp::{
 use embassy_time::{Duration, Timer};
 use static_cell::StaticCell;
 
-use embedded_alloc::TlsfHeap as Heap;
-
 use cyw43::{SpiBus, aligned_bytes};
 use cyw43_pio::{DEFAULT_CLOCK_DIVIDER, PioSpi};
-
-#[global_allocator]
-static HEAP: Heap = Heap::empty();
 
 bind_interrupts!(struct Irqs {
     PIO0_IRQ_0 => pio::InterruptHandler<PIO0>;
@@ -41,10 +36,6 @@ async fn wifi_task(
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
-    unsafe {
-        embedded_alloc::init!(HEAP, 128 * 1024);
-    }
-
     let p = embassy_rp::init(Default::default());
 
     let pwr = Output::new(p.PIN_23, Level::Low);
