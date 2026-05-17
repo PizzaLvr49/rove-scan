@@ -62,7 +62,7 @@ async fn main(spawner: Spawner) {
 
     let (_device, mut control, runner) = cyw43::new(state, pwr, spi, fw, nvram).await;
 
-    spawner.spawn(wifi_task(runner).unwrap());
+    spawner.spawn(unwrap!(wifi_task(runner)));
 
     control
         .init(include_bytes!("../firmware/43439A0_clm.bin"))
