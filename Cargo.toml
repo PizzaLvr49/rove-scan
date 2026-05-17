@@ -39,13 +39,11 @@ embassy-time = { version = "0.5.1", features = [
 ] }
 embedded-io-async = { version = "0.7.0", features = ["defmt"] }
 heapless = { version = "0.9.3", features = ["defmt", "embedded-io-v0.7"] }
-icm426xx = { version = "0.4.0", features = ["async", "defmt"] }
 panic-probe = { version = "1.0.0", features = ["print-defmt"] }
 portable-atomic = { version = "1.13.1", features = ["critical-section"] }
 postcard = { version = "1.1.3", default-features = false, features = ["defmt"] }
 serde = { version = "1.0.228", features = ["derive"], default-features = false }
 static_cell = "2.1.1"
-vl53l1x-uld = "2.0.1"
 
 [[bin]]
 name = "rove-scan"

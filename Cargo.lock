@@ -21,12 +21,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arbitrary-int"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "993a810118f8f37e9c4411c86f1c4c940a09a7ab34b7bf2d88d06f50c553fab7"
-
-[[package]]
 name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -72,29 +66,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bilge"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "279c74986684d5cc7bbbd079aa448e8f852992cd385d85bb3a37e374c087b065"
-dependencies = [
- "arbitrary-int",
- "bilge-impl",
-]
-
-[[package]]
-name = "bilge-impl"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1176e49f42fe135cd2b56465e4f7d07038d3728f5e9f27fb2f08ed3fef75339"
-dependencies = [
- "itertools",
- "proc-macro-error2",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "bit-set"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -114,12 +85,6 @@ name = "bitfield"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46afbd2983a5d5a7bd740ccb198caf5b82f45c40c09c0eed36052d91cb92e719"
-
-[[package]]
-name = "bitfield"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d7e60934ceec538daadb9d8432424ed043a904d8e0243f3c6446bce549a46ac"
 
 [[package]]
 name = "bitflags"
@@ -171,20 +136,6 @@ name = "bytemuck"
 version = "1.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8efb64bd706a16a1bdde310ae86b351e4d21550d98d056f22f8a7f7a2183fec"
-dependencies = [
- "bytemuck_derive",
-]
-
-[[package]]
-name = "bytemuck_derive"
-version = "1.10.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9abbd1bc6865053c427f7198e6af43bfdedc55ab791faed4fbd361d789575ff"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "byteorder"
@@ -255,7 +206,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ec610d8f49840a5b376c69663b6369e71f4b34484b9b2eb29fb918d92516cb9"
 dependencies = [
  "bare-metal",
- "bitfield 0.13.2",
+ "bitfield",
  "embedded-hal 0.2.7",
  "volatile-register",
 ]
@@ -969,20 +920,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "icm426xx"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58a05e347b0a47ce90ee7d3817537c505462541947817d42d4aaaaa3c59284f2"
-dependencies = [
- "bilge",
- "bytemuck",
- "defmt 1.1.0",
- "embedded-hal 1.0.0",
- "embedded-hal-async",
- "paste",
-]
-
-[[package]]
 name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1447,13 +1384,11 @@ dependencies = [
  "embassy-time",
  "embedded-io-async",
  "heapless",
- "icm426xx",
  "panic-probe",
  "portable-atomic",
  "postcard",
  "serde",
  "static_cell",
- "vl53l1x-uld",
 ]
 
 [[package]]
@@ -1824,27 +1759,6 @@ name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
-
-[[package]]
-name = "vl53l1-reg"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25e4c76e861c783d8ef11c633568443f44cbfdbe7723ab3bd1be69a73ea4a9b9"
-dependencies = [
- "bitfield 0.14.0",
- "embedded-hal 0.2.7",
-]
-
-[[package]]
-name = "vl53l1x-uld"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a6c5dd7a38f7e9cc03173f74002b3ea23b7482e00b9a52e863030fd8316c8b1"
-dependencies = [
- "cfg-if",
- "embedded-hal 0.2.7",
- "vl53l1-reg",
-]
 
 [[package]]
 name = "void"
