@@ -1,15 +1,15 @@
 #![no_std]
 #![no_main]
 
-extern crate alloc;
-
 use defmt::*;
 use defmt_rtt as _;
 use panic_probe as _;
 
 use embassy_executor::Spawner;
 use embassy_rp::{
-    bind_interrupts, dma,
+    bind_interrupts,
+    config::Config,
+    dma,
     gpio::{Level, Output},
     peripherals::{DMA_CH0, PIO0},
     pio::{self, Pio},
@@ -36,7 +36,7 @@ async fn wifi_task(
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
-    let p = embassy_rp::init(Default::default());
+    let p = embassy_rp::init(Config::default());
 
     let pwr = Output::new(p.PIN_23, Level::Low);
     let cs = Output::new(p.PIN_25, Level::High);
