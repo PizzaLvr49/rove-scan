@@ -417,6 +417,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotenvy"
+version = "0.15.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1376,6 +1382,7 @@ dependencies = [
  "cyw43-pio",
  "defmt 1.1.0",
  "defmt-rtt",
+ "dotenvy",
  "embassy-executor",
  "embassy-futures",
  "embassy-net",

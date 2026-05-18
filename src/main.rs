@@ -32,6 +32,9 @@ bind_interrupts!(struct Irqs {
     DMA_IRQ_0 => dma::InterruptHandler<DMA_CH0>;
 });
 
+const SSID: &str = env!("SSID");
+const PASSWORD: &str = env!("PASSWORD");
+
 static STATE: StaticCell<cyw43::State> = StaticCell::new();
 static RESOURCES: StaticCell<StackResources<4>> = StaticCell::new();
 
@@ -86,7 +89,7 @@ async fn main(spawner: Spawner) {
         .await;
 
     control
-        .join("SSID", JoinOptions::new(b"PASS"))
+        .join(SSID, JoinOptions::new(PASSWORD.as_bytes()))
         .await
         .unwrap();
 
