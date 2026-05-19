@@ -112,7 +112,7 @@ async fn main(spawner: Spawner) {
         net_device,
         config,
         RESOURCES.init(StackResources::new()),
-        0x1234,
+        RoscRng.next_u64(),
     );
 
     spawner.spawn(unwrap!(net_task(runner)));
