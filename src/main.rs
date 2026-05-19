@@ -14,15 +14,17 @@ use embassy_net::{
 };
 use embassy_rp::{
     bind_interrupts,
-    clocks::{ClockConfig, RoscRng},
+    clocks::ClockConfig,
     config::Config,
     dma,
     gpio::{Level, Output},
-    peripherals::{DMA_CH0, PIO0},
+    peripherals::{DMA_CH0, PIO0, TRNG},
     pio::{self, Pio},
+    trng::{self, Trng},
 };
 use embassy_time::{Duration, Timer};
 
+use rand::RngCore;
 use static_cell::StaticCell;
 
 use cyw43::{JoinOptions, NetDriver, SpiBus, aligned_bytes};
@@ -31,6 +33,7 @@ use cyw43_pio::{DEFAULT_CLOCK_DIVIDER, PioSpi};
 bind_interrupts!(struct Irqs {
     PIO0_IRQ_0 => pio::InterruptHandler<PIO0>;
     DMA_IRQ_0 => dma::InterruptHandler<DMA_CH0>;
+    TRNG_IRQ  => trng::InterruptHandler<TRNG>;
 });
 
 const SSID: &str = env!("SSID");
@@ -62,6 +65,8 @@ async fn main(spawner: Spawner) {
     let clock_config = unwrap!(ClockConfig::system_freq(250_000_000), "Clock init failed");
 
     let p = embassy_rp::init(Config::new(clock_config));
+
+    let mut rng = Trng::new(p.TRNG, Irqs, trng::Config::default());
 
     let pwr = Output::new(p.PIN_23, Level::Low);
     let cs = Output::new(p.PIN_25, Level::High);
@@ -117,7 +122,7 @@ async fn main(spawner: Spawner) {
         net_device,
         net_config,
         RESOURCES.init(StackResources::new()),
-        RoscRng.next_u64(),
+        rng.next_u64(),
     );
 
     spawner.spawn(unwrap!(net_task(runner)));
