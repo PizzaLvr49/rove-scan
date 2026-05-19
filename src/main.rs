@@ -22,7 +22,7 @@ use embassy_rp::{
     pio::{self, Pio},
     trng::{self, Trng},
 };
-use embassy_time::{Duration, Timer};
+use embassy_time::{Duration, Ticker, Timer, with_timeout};
 
 use rand::RngCore;
 use static_cell::StaticCell;
@@ -43,7 +43,7 @@ const TARGET_IP: Ipv4Addr = Ipv4Addr::new(192, 168, 1, 50);
 const TARGET_PORT: u16 = 9000;
 const LOCAL_PORT: u16 = 9001;
 
-const MAX_SOCKETS: usize = 4;
+const MAX_SOCKETS: usize = 1;
 
 static STATE: StaticCell<cyw43::State> = StaticCell::new();
 static RESOURCES: StaticCell<StackResources<MAX_SOCKETS>> = StaticCell::new();
@@ -128,7 +128,12 @@ async fn main(spawner: Spawner) {
     spawner.spawn(unwrap!(net_task(runner)));
 
     info!("Waiting for DHCP...");
-    stack.wait_config_up().await;
+    if with_timeout(Duration::from_secs(5), stack.wait_config_up())
+        .await
+        .is_err()
+    {
+        error!("DHCP Timeout");
+    }
 
     let ip = unwrap!(stack.config_v4(), "No IPv4 config after DHCP").address;
     info!("IP address: {}", ip);
@@ -144,8 +149,10 @@ async fn main(spawner: Spawner) {
 
     let msg = b"hello world";
 
+    let mut ticker = Ticker::every(Duration::from_secs(1));
+
     loop {
-        Timer::after(Duration::from_secs(1)).await;
+        ticker.next().await;
 
         match socket
             .send_to(msg, (IpAddress::Ipv4(TARGET_IP), TARGET_PORT))
