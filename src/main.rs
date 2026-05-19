@@ -9,7 +9,7 @@ use panic_probe as _;
 
 use embassy_executor::Spawner;
 use embassy_net::{
-    self, Config as NetConfig, DhcpConfig, IpAddress, StackResources,
+    Config as NetConfig, DhcpConfig, IpAddress, StackResources,
     udp::{PacketMetadata, UdpSocket},
 };
 use embassy_rp::{
@@ -22,8 +22,6 @@ use embassy_rp::{
     pio::{self, Pio},
 };
 use embassy_time::{Duration, Timer};
-
-use rand::prelude::*;
 
 use static_cell::StaticCell;
 
@@ -38,8 +36,14 @@ bind_interrupts!(struct Irqs {
 const SSID: &str = env!("SSID");
 const PASSWORD: &str = env!("PASSWORD");
 
+const TARGET_IP: Ipv4Addr = Ipv4Addr::new(192, 168, 1, 50);
+const TARGET_PORT: u16 = 9000;
+const LOCAL_PORT: u16 = 9001;
+
+const MAX_SOCKETS: usize = 4;
+
 static STATE: StaticCell<cyw43::State> = StaticCell::new();
-static RESOURCES: StaticCell<StackResources<4>> = StaticCell::new();
+static RESOURCES: StaticCell<StackResources<MAX_SOCKETS>> = StaticCell::new();
 
 #[embassy_executor::task]
 async fn wifi_task(
@@ -55,9 +59,9 @@ async fn net_task(mut runner: embassy_net::Runner<'static, NetDriver<'static>>) 
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
-    let config = ClockConfig::system_freq(250_000_000).expect("Clock Init Failed");
+    let clock_config = unwrap!(ClockConfig::system_freq(250_000_000), "Clock init failed");
 
-    let p = embassy_rp::init(Config::new(config));
+    let p = embassy_rp::init(Config::new(clock_config));
 
     let pwr = Output::new(p.PIN_23, Level::Low);
     let cs = Output::new(p.PIN_25, Level::High);
@@ -76,17 +80,9 @@ async fn main(spawner: Spawner) {
     );
 
     let fw = aligned_bytes!("../firmware/43439A0.bin");
-
     let nvram = aligned_bytes!("../firmware/43439A0_nvram.bin");
 
-    let x = [4, 7, 12, 5];
-
-    let num = x.choose(&mut RoscRng);
-
-    info!("{}", num);
-
     let state = STATE.init(cyw43::State::new());
-
     let (net_device, mut control, runner) = cyw43::new(state, pwr, spi, fw, nvram).await;
 
     spawner.spawn(unwrap!(wifi_task(runner)));
@@ -99,48 +95,59 @@ async fn main(spawner: Spawner) {
         .set_power_management(cyw43::PowerManagementMode::None)
         .await;
 
-    control
-        .join(SSID, JoinOptions::new(PASSWORD.as_bytes()))
-        .await
-        .unwrap();
+    loop {
+        match control
+            .join(SSID, JoinOptions::new(PASSWORD.as_bytes()))
+            .await
+        {
+            Ok(()) => {
+                info!("WiFi connected");
+                break;
+            }
+            Err(err) => {
+                warn!("WiFi join failed: {}, retrying in 5s...", err);
+                Timer::after(Duration::from_secs(5)).await;
+            }
+        }
+    }
 
-    info!("WiFi connected");
-
-    let config = NetConfig::dhcpv4(DhcpConfig::default());
+    let net_config = NetConfig::dhcpv4(DhcpConfig::default());
 
     let (stack, runner) = embassy_net::new(
         net_device,
-        config,
+        net_config,
         RESOURCES.init(StackResources::new()),
         RoscRng.next_u64(),
     );
 
     spawner.spawn(unwrap!(net_task(runner)));
 
-    Timer::after(Duration::from_secs(3)).await;
+    info!("Waiting for DHCP...");
+    stack.wait_config_up().await;
+
+    let ip = unwrap!(stack.config_v4(), "No IPv4 config after DHCP").address;
+    info!("IP address: {}", ip);
 
     let mut rx_meta = [PacketMetadata::EMPTY; 16];
     let mut tx_meta = [PacketMetadata::EMPTY; 16];
-
     let mut rx = [0u8; 256];
     let mut tx = [0u8; 256];
 
     let mut socket = UdpSocket::new(stack, &mut rx_meta, &mut rx, &mut tx_meta, &mut tx);
-    socket.bind(0).unwrap();
+
+    unwrap!(socket.bind(LOCAL_PORT), "UDP bind failed");
 
     let msg = b"hello world";
 
     loop {
         Timer::after(Duration::from_secs(1)).await;
 
-        let result = socket
-            .send_to(msg, (IpAddress::Ipv4(Ipv4Addr::new(192, 168, 1, 50)), 9000))
-            .await;
-
-        if let Err(err) = result {
-            warn!("net error: {}", err);
+        match socket
+            .send_to(msg, (IpAddress::Ipv4(TARGET_IP), TARGET_PORT))
+            .await
+        {
+            Ok(()) => info!("Sent to {}:{}", TARGET_IP, TARGET_PORT),
+            Err(err) => warn!("Send failed: {}", err),
         }
-
-        info!("sent");
     }
 }
