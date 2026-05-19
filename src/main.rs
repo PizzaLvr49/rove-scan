@@ -14,7 +14,7 @@ use embassy_net::{
 };
 use embassy_rp::{
     bind_interrupts,
-    clocks::ClockConfig,
+    clocks::{ClockConfig, RoscRng},
     config::Config,
     dma,
     gpio::{Level, Output},
@@ -22,6 +22,8 @@ use embassy_rp::{
     pio::{self, Pio},
 };
 use embassy_time::{Duration, Timer};
+
+use rand::prelude::*;
 
 use static_cell::StaticCell;
 
@@ -76,6 +78,12 @@ async fn main(spawner: Spawner) {
     let fw = aligned_bytes!("../firmware/43439A0.bin");
 
     let nvram = aligned_bytes!("../firmware/43439A0_nvram.bin");
+
+    let x = [4, 7, 12, 5];
+
+    let num = x.choose(&mut RoscRng);
+
+    info!("{}", num);
 
     let state = STATE.init(cyw43::State::new());
 
