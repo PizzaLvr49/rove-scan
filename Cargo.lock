@@ -764,6 +764,7 @@ checksum = "9af2cbf772fa6d1c11358f92ef554cb6b386201210bcf0e91fb7fba8a907fb40"
 dependencies = [
  "az",
  "bytemuck",
+ "defmt 1.1.0",
  "half",
  "typenum",
 ]
@@ -1399,6 +1400,7 @@ dependencies = [
  "embassy-sync",
  "embassy-time",
  "embedded-io-async",
+ "fixed",
  "heapless",
  "panic-probe",
  "portable-atomic",

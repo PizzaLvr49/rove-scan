@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+mod sg90;
+
 use core::net::Ipv4Addr;
 
 use defmt::*;
@@ -30,6 +32,8 @@ use static_cell::StaticCell;
 use cyw43::{JoinOptions, NetDriver, SpiBus, aligned_bytes};
 use cyw43_pio::{DEFAULT_CLOCK_DIVIDER, PioSpi};
 
+use sg90::Sg90;
+
 bind_interrupts!(struct Irqs {
     PIO0_IRQ_0 => pio::InterruptHandler<PIO0>;
     DMA_IRQ_0 => dma::InterruptHandler<DMA_CH0>;
@@ -58,6 +62,16 @@ async fn wifi_task(
 #[embassy_executor::task]
 async fn net_task(mut runner: embassy_net::Runner<'static, NetDriver<'static>>) -> ! {
     runner.run().await
+}
+
+#[embassy_executor::task]
+async fn servo_task(mut servo: Sg90<'static>) -> ! {
+    loop {
+        servo.set_angle(0.0);
+        Timer::after(Duration::from_secs(1)).await;
+        servo.set_angle(180.0);
+        Timer::after(Duration::from_secs(1)).await;
+    }
 }
 
 #[embassy_executor::main]
@@ -126,6 +140,10 @@ async fn main(spawner: Spawner) {
     );
 
     spawner.spawn(unwrap!(net_task(runner)));
+
+    let sg90 = Sg90::new(p.PWM_SLICE0, p.PIN_0);
+
+    spawner.spawn(unwrap!(servo_task(sg90)));
 
     info!("Waiting for DHCP...");
     if with_timeout(Duration::from_secs(5), stack.wait_config_up())
