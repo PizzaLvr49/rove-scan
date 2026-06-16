@@ -3,11 +3,12 @@
 
 mod sg90;
 
+extern crate defmt_rtt;
+extern crate panic_probe;
+
 use core::net::Ipv4Addr;
 
-use defmt::*;
-use defmt_rtt as _;
-use panic_probe as _;
+use defmt::{error, info, unwrap, warn};
 
 use embassy_executor::Spawner;
 use embassy_net::{
@@ -26,7 +27,6 @@ use embassy_rp::{
 };
 use embassy_time::{Duration, Ticker, Timer, with_timeout};
 
-use rand::RngCore;
 use static_cell::StaticCell;
 
 use cyw43::{JoinOptions, NetDriver, SpiBus, aligned_bytes};
@@ -136,7 +136,7 @@ async fn main(spawner: Spawner) {
         net_device,
         net_config,
         RESOURCES.init(StackResources::new()),
-        rng.next_u64(),
+        rng.blocking_next_u64(),
     );
 
     spawner.spawn(unwrap!(net_task(runner)));

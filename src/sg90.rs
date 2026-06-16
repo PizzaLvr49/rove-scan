@@ -45,6 +45,7 @@ impl<'d> Sg90<'d> {
         self.pwm.set_config(&self.config);
     }
 
+    #[expect(unused, reason = "not used yet")]
     pub fn set_pulse_us(&mut self, pulse_us: u16) {
         let clamped_pulse = pulse_us.clamp(1000, 2000);
 
