@@ -28,7 +28,7 @@ embassy-net = { version = "0.9.1", features = [
 embassy-rp = { version = "0.10.0", features = [
     "critical-section-impl",
     "defmt",
-    "rp235xa",
+    "rp235xb",
     "time-driver",
     "imagedef-secure-exe",
 ] }
