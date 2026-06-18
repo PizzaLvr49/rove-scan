@@ -86,8 +86,8 @@ async fn main(spawner: Spawner) {
         dma::Channel::new(p.DMA_CH0, Irqs),
     );
 
-    let fw = aligned_bytes!("../firmware/43439A0.bin");
-    let nvram = aligned_bytes!("../firmware/43439A0_nvram.bin");
+    let fw = aligned_bytes!("../embassy/cyw43-firmware/43439A0.bin");
+    let nvram = aligned_bytes!("../embassy/cyw43-firmware/nvram_rp2040.bin");
 
     let state = STATE.init(cyw43::State::new());
     let (net_device, mut control, runner) = cyw43::new(state, pwr, spi, fw, nvram).await;
@@ -95,7 +95,7 @@ async fn main(spawner: Spawner) {
     spawner.spawn(unwrap!(wifi_task(runner)));
 
     control
-        .init(include_bytes!("../firmware/43439A0_clm.bin"))
+        .init(include_bytes!("../embassy/cyw43-firmware/43439A0_clm.bin"))
         .await;
 
     control
