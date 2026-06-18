@@ -58,7 +58,7 @@ future_not_send = "allow"
 allow_attributes_without_reason = "deny"
 
 [profile.release]
-opt-level = 3
+opt-level = "s" # idk if s or 2 or 3 is optimal
 incremental = false
 debug = true # probers strips and apparently this can help probe rs debug or smth
 strip = "symbols"
