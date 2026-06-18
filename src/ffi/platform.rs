@@ -10,14 +10,15 @@ pub struct VL53L7CX_Platform {
     pub i2c: *mut core::ffi::c_void,
 }
 
-unsafe fn get(p: *mut VL53L7CX_Platform) -> (&'static mut Bus, u8) {
-    let (p_ref, bus) = unsafe {
-        let p_ref = &*p;
-        let bus = &mut *(p_ref.i2c.cast::<Bus>());
-        (p_ref, bus)
-    };
-
-    let addr = u8::try_from(p_ref.address >> 1).unwrap_or(0);
+/// # Safety
+/// - `p` must be a valid, aligned, non-null pointer to a live `VL53L7CX_Platform`.
+/// - `p.i2c` must point to a live `Bus` with no other outstanding mutable references
+///   for the duration of the returned borrow.
+/// - `p.address` must be an 8-bit I2C write address (LSB = 0, 7-bit value ≤ 0x7F).
+unsafe fn get<'a>(p: *mut VL53L7CX_Platform) -> (&'a mut Bus, u8) {
+    let p_ref = unsafe { &*p };
+    let bus = unsafe { &mut *p_ref.i2c.cast::<Bus>() };
+    let addr = u8::try_from(p_ref.address >> 1).expect("VL53L7CX I2C address exceeds 7-bit range");
     (bus, addr)
 }
 
@@ -68,12 +69,8 @@ pub unsafe extern "C" fn VL53L7CX_RdMulti(
 ) -> u8 {
     let (bus, addr) = unsafe { get(p) };
     let buf = unsafe { core::slice::from_raw_parts_mut(out, size as usize) };
-
-    bus.transaction(
-        addr,
-        &mut [Operation::Write(&reg.to_be_bytes()), Operation::Read(buf)],
-    )
-    .map_or(1, |()| 0)
+    bus.write_read(addr, &reg.to_be_bytes(), buf)
+        .map_or(1, |()| 0)
 }
 
 #[unsafe(no_mangle)]
@@ -82,17 +79,21 @@ pub unsafe extern "C" fn VL53L7CX_WaitMs(_p: *mut VL53L7CX_Platform, ms: u32) ->
     0
 }
 
-// Reimplement the byteswap from platform.c — same logic, unaligned-safe
+/// No XSHUT pin is wired on this platform; non-zero tells the driver to fall
+/// back to a soft reset via register writes.  Wire up a GPIO here if needed.
 #[unsafe(no_mangle)]
-pub const unsafe extern "C" fn VL53L7CX_SwapBuffer(buffer: *mut u8, size: u16) {
-    let mut i = 0usize;
-    while i < size as usize {
+pub const unsafe extern "C" fn VL53L7CX_Reset_Sensor(_p: *mut VL53L7CX_Platform) -> u8 {
+    1
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn VL53L7CX_SwapBuffer(buffer: *mut u8, size: u16) {
+    for i in 0..(size / 4) as usize {
         unsafe {
-            let p = buffer.add(i);
+            let p = buffer.add(i * 4);
             let bytes = p.cast::<[u8; 4]>().read_unaligned();
-            let swapped = [bytes[3], bytes[2], bytes[1], bytes[0]];
+            let swapped = u32::from_ne_bytes(bytes).swap_bytes().to_ne_bytes();
             p.cast::<[u8; 4]>().write_unaligned(swapped);
         }
-        i += 4;
     }
 }
