@@ -60,8 +60,7 @@ fn main() {
         .allowlist_function("vl53l7cx_.*")
         .allowlist_type("VL53L7CX_.*")
         .allowlist_var("VL53L7CX_.*")
-        .use_core()
-        .ctypes_prefix("core::ffi");
+        .use_core();
 
     if !sysroot.is_empty() {
         bindgen_builder = bindgen_builder.clang_arg(format!("-isystem{sysroot}/include"));
