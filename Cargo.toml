@@ -37,6 +37,7 @@ embassy-time = { version = "0.5.1", features = [
     "defmt",
     "defmt-timestamp-uptime",
 ] }
+embedded-hal = "1.0.0"
 embedded-io-async = { version = "0.7.0", features = ["defmt"] }
 fixed = { version = "1.31.0", features = ["defmt"] }
 heapless = { version = "0.9.3", features = ["defmt", "embedded-io-v0.7"] }
@@ -57,8 +58,9 @@ future_not_send = "allow"
 allow_attributes_without_reason = "deny"
 
 [profile.release]
-opt-level = "s"
-debug = false
+opt-level = 3
+incremental = false
+debug = true # probers strips and apparently this can help probe rs debug or smth
 strip = "symbols"
 lto = "fat"
 panic = "abort"

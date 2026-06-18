@@ -1,14 +1,14 @@
 /**
-  *
-  * Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ *
+ * Copyright (c) 2021 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 
 #include "vl53l7cx_plugin_xtalk.h"
 
@@ -18,31 +18,31 @@
  */
 
 static uint8_t _vl53l7cx_poll_for_answer(
-		VL53L7CX_Configuration   *p_dev,
-		uint16_t 				address,
-		uint8_t 				expected_value)
+	VL53L7CX_Configuration *p_dev,
+	uint16_t address,
+	uint8_t expected_value)
 {
 	uint8_t status = VL53L7CX_STATUS_OK;
 	uint8_t timeout = 0;
 
-	do {
-		status |= VL53L7CX_RdMulti(&(p_dev->platform), 
-                                  address, p_dev->temp_buffer, 4);
+	do
+	{
+		status |= VL53L7CX_RdMulti(&(p_dev->platform),
+								   address, p_dev->temp_buffer, 4);
 		status |= VL53L7CX_WaitMs(&(p_dev->platform), 10);
-		
-                /* 2s timeout or FW error*/
-		if((timeout >= (uint8_t)200) 
-                   || (p_dev->temp_buffer[2] >= (uint8_t) 0x7f))
+
+		/* 2s timeout or FW error*/
+		if ((timeout >= (uint8_t)200) || (p_dev->temp_buffer[2] >= (uint8_t)0x7f))
 		{
 			status |= VL53L7CX_MCU_ERROR;
 			break;
 		}
 		else
 		{
-		  timeout++;
+			timeout++;
 		}
-	}while ((p_dev->temp_buffer[0x1]) != expected_value);
-        
+	} while ((p_dev->temp_buffer[0x1]) != expected_value);
+
 	return status;
 }
 
@@ -52,7 +52,7 @@ static uint8_t _vl53l7cx_poll_for_answer(
  */
 
 static uint8_t _vl53l7cx_program_output_config(
-		VL53L7CX_Configuration 		 *p_dev)
+	VL53L7CX_Configuration *p_dev)
 {
 	uint8_t resolution, status = VL53L7CX_STATUS_OK;
 	uint32_t i;
@@ -64,57 +64,51 @@ static uint8_t _vl53l7cx_program_output_config(
 
 	/* Enable mandatory output (meta and common data) */
 	uint32_t output_bh_enable[] = {
-			0x0001FFFFU,
-			0x00000000U,
-			0x00000000U,
-			0xC0000000U};
+		0x0001FFFFU,
+		0x00000000U,
+		0x00000000U,
+		0xC0000000U};
 
 	/* Send addresses of possible output */
-	uint32_t output[] ={
-			0x0000000DU,
-			0x54000040U,
-			0x9FD800C0U,
-			0x9FE40140U,
-			0x9FF80040U,
-			0x9FFC0404U,
-			0xA0FC0100U,
-			0xA10C0100U,
-			0xA11C00C0U,
-			0xA1280902U,
-			0xA2480040U,
-			0xA24C0081U,
-			0xA2540081U,
-			0xA25C0081U,
-			0xA2640081U,
-			0xA26C0084U,
-			0xA28C0082U};
+	uint32_t output[] = {
+		0x0000000DU,
+		0x54000040U,
+		0x9FD800C0U,
+		0x9FE40140U,
+		0x9FF80040U,
+		0x9FFC0404U,
+		0xA0FC0100U,
+		0xA10C0100U,
+		0xA11C00C0U,
+		0xA1280902U,
+		0xA2480040U,
+		0xA24C0081U,
+		0xA2540081U,
+		0xA25C0081U,
+		0xA2640081U,
+		0xA26C0084U,
+		0xA28C0082U};
 
 	/* Update data size */
-	for (i = 0; i < (uint32_t)(sizeof(output)/sizeof(uint32_t)); i++)
+	for (i = 0; i < (uint32_t)(sizeof(output) / sizeof(uint32_t)); i++)
 	{
-		if ((output[i] == (uint8_t)0) 
-                    || ((output_bh_enable[i/(uint32_t)32]
-                         &((uint32_t)1 << (i%(uint32_t)32))) == (uint32_t)0))
+		if ((output[i] == (uint8_t)0) || ((output_bh_enable[i / (uint32_t)32] & ((uint32_t)1 << (i % (uint32_t)32))) == (uint32_t)0))
 		{
 			continue;
 		}
 
 		bh_ptr = (union Block_header *)&(output[i]);
-		if (((uint8_t)bh_ptr->type >= (uint8_t)0x1) 
-                    && ((uint8_t)bh_ptr->type < (uint8_t)0x0d))
+		if (((uint8_t)bh_ptr->type >= (uint8_t)0x1) && ((uint8_t)bh_ptr->type < (uint8_t)0x0d))
 		{
-			if ((bh_ptr->idx >= (uint16_t)0x54d0) 
-                            && (bh_ptr->idx < (uint16_t)(0x54d0 + 960)))
+			if ((bh_ptr->idx >= (uint16_t)0x54d0) && (bh_ptr->idx < (uint16_t)(0x54d0 + 960)))
 			{
 				bh_ptr->size = resolution;
-			}	
-			else 
+			}
+			else
 			{
-				bh_ptr->size = (uint8_t)(resolution 
-                                  * (uint8_t)VL53L7CX_NB_TARGET_PER_ZONE);
+				bh_ptr->size = (uint8_t)(resolution * (uint8_t)VL53L7CX_NB_TARGET_PER_ZONE);
 			}
 
-                        
 			p_dev->data_read_size += bh_ptr->type * bh_ptr->size;
 		}
 		else
@@ -126,28 +120,28 @@ static uint8_t _vl53l7cx_program_output_config(
 	p_dev->data_read_size += (uint32_t)24;
 
 	status |= vl53l7cx_dci_write_data(p_dev,
-			(uint8_t*)&(output), 
-                        VL53L7CX_DCI_OUTPUT_LIST, (uint16_t)sizeof(output));
-        
+									  (uint8_t *)&(output),
+									  VL53L7CX_DCI_OUTPUT_LIST, (uint16_t)sizeof(output));
+
 	header_config[0] = p_dev->data_read_size;
 	header_config[1] = i + (uint32_t)1;
 
 	status |= vl53l7cx_dci_write_data(p_dev,
-			(uint8_t*)&(header_config), VL53L7CX_DCI_OUTPUT_CONFIG,
-			(uint16_t)sizeof(header_config));
+									  (uint8_t *)&(header_config), VL53L7CX_DCI_OUTPUT_CONFIG,
+									  (uint16_t)sizeof(header_config));
 
-	status |= vl53l7cx_dci_write_data(p_dev, (uint8_t*)&(output_bh_enable),
-			VL53L7CX_DCI_OUTPUT_ENABLES,
-                        (uint16_t)sizeof(output_bh_enable));
+	status |= vl53l7cx_dci_write_data(p_dev, (uint8_t *)&(output_bh_enable),
+									  VL53L7CX_DCI_OUTPUT_ENABLES,
+									  (uint16_t)sizeof(output_bh_enable));
 
 	return status;
 }
 
 uint8_t vl53l7cx_calibrate_xtalk(
-		VL53L7CX_Configuration		*p_dev,
-		uint16_t			reflectance_percent,
-		uint8_t				nb_samples,
-		uint16_t			distance_mm)
+	VL53L7CX_Configuration *p_dev,
+	uint16_t reflectance_percent,
+	uint8_t nb_samples,
+	uint16_t distance_mm)
 {
 	uint16_t timeout = 0;
 	uint8_t cmd[] = {0x00, 0x03, 0x00, 0x00};
@@ -156,9 +150,9 @@ uint8_t vl53l7cx_calibrate_xtalk(
 
 	uint8_t resolution, frequency, target_order, sharp_prct, ranging_mode;
 	uint32_t integration_time_ms, xtalk_margin;
-        
+
 	uint16_t reflectance = reflectance_percent;
-	uint8_t	samples = nb_samples;
+	uint8_t samples = nb_samples;
 	uint16_t distance = distance_mm;
 	uint8_t *default_xtalk_ptr;
 
@@ -172,25 +166,23 @@ uint8_t vl53l7cx_calibrate_xtalk(
 	status |= vl53l7cx_get_ranging_mode(p_dev, &ranging_mode);
 
 	/* Check input arguments validity */
-	if(((reflectance < (uint16_t)1) || (reflectance > (uint16_t)99))
-		|| ((distance < (uint16_t)600) || (distance > (uint16_t)3000))
-		|| ((samples < (uint8_t)1) || (samples > (uint8_t)16)))
+	if (((reflectance < (uint16_t)1) || (reflectance > (uint16_t)99)) || ((distance < (uint16_t)600) || (distance > (uint16_t)3000)) || ((samples < (uint8_t)1) || (samples > (uint8_t)16)))
 	{
 		status |= VL53L7CX_STATUS_INVALID_PARAM;
 	}
 	else
 	{
 		status |= vl53l7cx_set_resolution(p_dev,
-				VL53L7CX_RESOLUTION_8X8);
+										  VL53L7CX_RESOLUTION_8X8);
 
 		/* Send Xtalk calibration buffer */
-                (void)memcpy(p_dev->temp_buffer, VL53L7CX_CALIBRATE_XTALK,
-                       sizeof(VL53L7CX_CALIBRATE_XTALK));
+		(void)memcpy(p_dev->temp_buffer, VL53L7CX_CALIBRATE_XTALK,
+					 sizeof(VL53L7CX_CALIBRATE_XTALK));
 		status |= VL53L7CX_WrMulti(&(p_dev->platform), 0x2c28,
-				p_dev->temp_buffer, 
-                       (uint16_t)sizeof(VL53L7CX_CALIBRATE_XTALK));
+								   p_dev->temp_buffer,
+								   (uint16_t)sizeof(VL53L7CX_CALIBRATE_XTALK));
 		status |= _vl53l7cx_poll_for_answer(p_dev,
-				VL53L7CX_UI_CMD_STATUS, 0x3);
+											VL53L7CX_UI_CMD_STATUS, 0x3);
 
 		/* Format input argument */
 		reflectance = reflectance * (uint16_t)16;
@@ -198,48 +190,50 @@ uint8_t vl53l7cx_calibrate_xtalk(
 
 		/* Update required fields */
 		status |= vl53l7cx_dci_replace_data(p_dev, p_dev->temp_buffer,
-				VL53L7CX_DCI_CAL_CFG, 8,
-                                (uint8_t*)&distance, 2, 0x00);
+											VL53L7CX_DCI_CAL_CFG, 8,
+											(uint8_t *)&distance, 2, 0x00);
 
 		status |= vl53l7cx_dci_replace_data(p_dev, p_dev->temp_buffer,
-				VL53L7CX_DCI_CAL_CFG, 8,
-                                (uint8_t*)&reflectance, 2, 0x02);
+											VL53L7CX_DCI_CAL_CFG, 8,
+											(uint8_t *)&reflectance, 2, 0x02);
 
 		status |= vl53l7cx_dci_replace_data(p_dev, p_dev->temp_buffer,
-				VL53L7CX_DCI_CAL_CFG, 8,
-                                (uint8_t*)&samples, 1, 0x04);
+											VL53L7CX_DCI_CAL_CFG, 8,
+											(uint8_t *)&samples, 1, 0x04);
 
 		/* Program output for Xtalk calibration */
 		status |= _vl53l7cx_program_output_config(p_dev);
 
 		/* Start ranging session */
 		status |= VL53L7CX_WrMulti(&(p_dev->platform),
-				VL53L7CX_UI_CMD_END - (uint16_t)(4 - 1),
-				(uint8_t*)cmd, sizeof(cmd));
+								   VL53L7CX_UI_CMD_END - (uint16_t)(4 - 1),
+								   (uint8_t *)cmd, sizeof(cmd));
 		status |= _vl53l7cx_poll_for_answer(p_dev,
-				VL53L7CX_UI_CMD_STATUS, 0x3);
+											VL53L7CX_UI_CMD_STATUS, 0x3);
 
 		/* Wait for end of calibration */
-		do {
-			status |= VL53L7CX_RdMulti(&(p_dev->platform), 
-                                          0x0, p_dev->temp_buffer, 4);
+		do
+		{
+			status |= VL53L7CX_RdMulti(&(p_dev->platform),
+									   0x0, p_dev->temp_buffer, 4);
 
-			if(p_dev->temp_buffer[0] != VL53L7CX_STATUS_ERROR)
+			if (p_dev->temp_buffer[0] != VL53L7CX_STATUS_ERROR)
 			{
 				/* Coverglass too good for Xtalk calibration */
-				if((p_dev->temp_buffer[2] >= (uint8_t)0x7f) &&
-				(((uint16_t)(p_dev->temp_buffer[3] & 
-                                 (uint16_t)0x80) >> 7) == (uint16_t)1))
+				if ((p_dev->temp_buffer[2] >= (uint8_t)0x7f) &&
+					(((uint16_t)(p_dev->temp_buffer[3] &
+								 (uint16_t)0x80) >>
+					  7) == (uint16_t)1))
 				{
 					default_xtalk_ptr = p_dev->default_xtalk;
-					(void)memcpy(p_dev->xtalk_data, 
-						default_xtalk_ptr,
-						sizeof(p_dev->xtalk_data));
+					(void)memcpy(p_dev->xtalk_data,
+								 default_xtalk_ptr,
+								 sizeof(p_dev->xtalk_data));
 					status |= VL53L7CX_STATUS_XTALK_FAILED;
 				}
 				continue_loop = (uint8_t)0;
 			}
-			else if(timeout >= (uint16_t)400)
+			else if (timeout >= (uint16_t)400)
 			{
 				status |= VL53L7CX_STATUS_ERROR;
 				continue_loop = (uint8_t)0;
@@ -250,30 +244,29 @@ uint8_t vl53l7cx_calibrate_xtalk(
 				status |= VL53L7CX_WaitMs(&(p_dev->platform), 50);
 			}
 
-		}while (continue_loop == (uint8_t)1);
+		} while (continue_loop == (uint8_t)1);
 	}
 
 	/* Save Xtalk data into the Xtalk buffer */
-        (void)memcpy(p_dev->temp_buffer, VL53L7CX_GET_XTALK_CMD,
-               sizeof(VL53L7CX_GET_XTALK_CMD));
+	(void)memcpy(p_dev->temp_buffer, VL53L7CX_GET_XTALK_CMD,
+				 sizeof(VL53L7CX_GET_XTALK_CMD));
 	status |= VL53L7CX_WrMulti(&(p_dev->platform), 0x2fb8,
-			p_dev->temp_buffer, 
-                        (uint16_t)sizeof(VL53L7CX_GET_XTALK_CMD));
-	status |= _vl53l7cx_poll_for_answer(p_dev,VL53L7CX_UI_CMD_STATUS, 0x03);
+							   p_dev->temp_buffer,
+							   (uint16_t)sizeof(VL53L7CX_GET_XTALK_CMD));
+	status |= _vl53l7cx_poll_for_answer(p_dev, VL53L7CX_UI_CMD_STATUS, 0x03);
 	status |= VL53L7CX_RdMulti(&(p_dev->platform), VL53L7CX_UI_CMD_START,
-			p_dev->temp_buffer, 
-                        VL53L7CX_XTALK_BUFFER_SIZE + (uint16_t)4);
+							   p_dev->temp_buffer,
+							   VL53L7CX_XTALK_BUFFER_SIZE + (uint16_t)4);
 
 	(void)memcpy(&(p_dev->xtalk_data[0]), &(p_dev->temp_buffer[8]),
-			VL53L7CX_XTALK_BUFFER_SIZE - (uint16_t)8);
-	(void)memcpy(&(p_dev->xtalk_data[VL53L7CX_XTALK_BUFFER_SIZE
-                       - (uint16_t)8]), footer, sizeof(footer));
+				 VL53L7CX_XTALK_BUFFER_SIZE - (uint16_t)8);
+	(void)memcpy(&(p_dev->xtalk_data[VL53L7CX_XTALK_BUFFER_SIZE - (uint16_t)8]), footer, sizeof(footer));
 
 	/* Reset default buffer */
 	status |= VL53L7CX_WrMulti(&(p_dev->platform), 0x2c34,
-			p_dev->default_configuration,
-			VL53L7CX_CONFIGURATION_SIZE);
-	status |= _vl53l7cx_poll_for_answer(p_dev,VL53L7CX_UI_CMD_STATUS, 0x03);
+							   p_dev->default_configuration,
+							   VL53L7CX_CONFIGURATION_SIZE);
+	status |= _vl53l7cx_poll_for_answer(p_dev, VL53L7CX_UI_CMD_STATUS, 0x03);
 
 	/* Reset initial configuration */
 	status |= vl53l7cx_set_resolution(p_dev, resolution);
@@ -288,8 +281,8 @@ uint8_t vl53l7cx_calibrate_xtalk(
 }
 
 uint8_t vl53l7cx_get_caldata_xtalk(
-		VL53L7CX_Configuration		*p_dev,
-		uint8_t				*p_xtalk_data)
+	VL53L7CX_Configuration *p_dev,
+	uint8_t *p_xtalk_data)
 {
 	uint8_t status = VL53L7CX_STATUS_OK, resolution;
 	uint8_t footer[] = {0x00, 0x00, 0x00, 0x0F, 0x00, 0x01, 0x03, 0x04};
@@ -297,19 +290,19 @@ uint8_t vl53l7cx_get_caldata_xtalk(
 	status |= vl53l7cx_get_resolution(p_dev, &resolution);
 	status |= vl53l7cx_set_resolution(p_dev, VL53L7CX_RESOLUTION_8X8);
 
-        (void)memcpy(p_dev->temp_buffer, VL53L7CX_GET_XTALK_CMD,
-               sizeof(VL53L7CX_GET_XTALK_CMD));
+	(void)memcpy(p_dev->temp_buffer, VL53L7CX_GET_XTALK_CMD,
+				 sizeof(VL53L7CX_GET_XTALK_CMD));
 	status |= VL53L7CX_WrMulti(&(p_dev->platform), 0x2fb8,
-			p_dev->temp_buffer,  sizeof(VL53L7CX_GET_XTALK_CMD));
-	status |= _vl53l7cx_poll_for_answer(p_dev,VL53L7CX_UI_CMD_STATUS, 0x03);
+							   p_dev->temp_buffer, sizeof(VL53L7CX_GET_XTALK_CMD));
+	status |= _vl53l7cx_poll_for_answer(p_dev, VL53L7CX_UI_CMD_STATUS, 0x03);
 	status |= VL53L7CX_RdMulti(&(p_dev->platform), VL53L7CX_UI_CMD_START,
-			p_dev->temp_buffer, 
-                        VL53L7CX_XTALK_BUFFER_SIZE + (uint16_t)4);
+							   p_dev->temp_buffer,
+							   VL53L7CX_XTALK_BUFFER_SIZE + (uint16_t)4);
 
 	(void)memcpy(&(p_xtalk_data[0]), &(p_dev->temp_buffer[8]),
-			VL53L7CX_XTALK_BUFFER_SIZE-(uint16_t)8);
+				 VL53L7CX_XTALK_BUFFER_SIZE - (uint16_t)8);
 	(void)memcpy(&(p_xtalk_data[VL53L7CX_XTALK_BUFFER_SIZE - (uint16_t)8]),
-			footer, sizeof(footer));
+				 footer, sizeof(footer));
 
 	status |= vl53l7cx_set_resolution(p_dev, resolution);
 
@@ -317,8 +310,8 @@ uint8_t vl53l7cx_get_caldata_xtalk(
 }
 
 uint8_t vl53l7cx_set_caldata_xtalk(
-		VL53L7CX_Configuration		*p_dev,
-		uint8_t				*p_xtalk_data)
+	VL53L7CX_Configuration *p_dev,
+	uint8_t *p_xtalk_data)
 {
 	uint8_t resolution, status = VL53L7CX_STATUS_OK;
 
@@ -330,37 +323,37 @@ uint8_t vl53l7cx_set_caldata_xtalk(
 }
 
 uint8_t vl53l7cx_get_xtalk_margin(
-		VL53L7CX_Configuration		*p_dev,
-		uint32_t			*p_xtalk_margin)
+	VL53L7CX_Configuration *p_dev,
+	uint32_t *p_xtalk_margin)
 {
 	uint8_t status = VL53L7CX_STATUS_OK;
 
-	status |= vl53l7cx_dci_read_data(p_dev, (uint8_t*)p_dev->temp_buffer,
-			VL53L7CX_DCI_XTALK_CFG, 16);
+	status |= vl53l7cx_dci_read_data(p_dev, (uint8_t *)p_dev->temp_buffer,
+									 VL53L7CX_DCI_XTALK_CFG, 16);
 
 	(void)memcpy(p_xtalk_margin, p_dev->temp_buffer, 4);
-	*p_xtalk_margin = *p_xtalk_margin/(uint32_t)2048;
+	*p_xtalk_margin = *p_xtalk_margin / (uint32_t)2048;
 
 	return status;
 }
 
 uint8_t vl53l7cx_set_xtalk_margin(
-		VL53L7CX_Configuration		*p_dev,
-		uint32_t			xtalk_margin)
+	VL53L7CX_Configuration *p_dev,
+	uint32_t xtalk_margin)
 {
 	uint8_t status = VL53L7CX_STATUS_OK;
-        uint32_t margin_kcps = xtalk_margin;
+	uint32_t margin_kcps = xtalk_margin;
 
-	if(margin_kcps > (uint32_t)10000)
+	if (margin_kcps > (uint32_t)10000)
 	{
 		status |= VL53L7CX_STATUS_INVALID_PARAM;
 	}
 	else
 	{
-		margin_kcps = margin_kcps*(uint32_t)2048;
+		margin_kcps = margin_kcps * (uint32_t)2048;
 		status |= vl53l7cx_dci_replace_data(p_dev, p_dev->temp_buffer,
-				VL53L7CX_DCI_XTALK_CFG, 16,
-                                (uint8_t*)&margin_kcps, 4, 0x00);
+											VL53L7CX_DCI_XTALK_CFG, 16,
+											(uint8_t *)&margin_kcps, 4, 0x00);
 	}
 
 	return status;

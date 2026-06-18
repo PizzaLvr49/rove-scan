@@ -1463,6 +1463,7 @@ dependencies = [
  "embassy-rp",
  "embassy-sync",
  "embassy-time",
+ "embedded-hal 1.0.0",
  "embedded-io-async",
  "fixed",
  "heapless",

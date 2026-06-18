@@ -1,14 +1,14 @@
 /**
-  *
-  * Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ *
+ * Copyright (c) 2021 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 
 #ifndef VL53L7CX_PLUGIN_XTALK_H_
 #define VL53L7CX_PLUGIN_XTALK_H_
@@ -20,18 +20,17 @@
  */
 
 #if VL53L7CX_NB_TARGET_PER_ZONE == 1
-#define VL53L7CX_FW_NBTAR_XTALK	2
+#define VL53L7CX_FW_NBTAR_XTALK 2
 #else
-#define VL53L7CX_FW_NBTAR_XTALK	VL53L7CX_NB_TARGET_PER_ZONE
+#define VL53L7CX_FW_NBTAR_XTALK VL53L7CX_NB_TARGET_PER_ZONE
 #endif
 
 /**
  * @brief Inner Macro for plugin. Not for user, only for development.
  */
 
-#define VL53L7CX_DCI_CAL_CFG				((uint16_t)0x5470U)
-#define VL53L7CX_DCI_XTALK_CFG				((uint16_t)0xAD94U)
-
+#define VL53L7CX_DCI_CAL_CFG ((uint16_t)0x5470U)
+#define VL53L7CX_DCI_XTALK_CFG ((uint16_t)0xAD94U)
 
 /**
  * @brief This function starts the VL53L7CX sensor in order to calibrate Xtalk.
@@ -51,10 +50,10 @@
  */
 
 uint8_t vl53l7cx_calibrate_xtalk(
-		VL53L7CX_Configuration		*p_dev,
-		uint16_t			reflectance_percent,
-		uint8_t				nb_samples,
-		uint16_t			distance_mm);
+	VL53L7CX_Configuration *p_dev,
+	uint16_t reflectance_percent,
+	uint8_t nb_samples,
+	uint16_t distance_mm);
 
 /**
  * @brief This function gets the Xtalk buffer. The buffer is available after
@@ -66,8 +65,8 @@ uint8_t vl53l7cx_calibrate_xtalk(
  */
 
 uint8_t vl53l7cx_get_caldata_xtalk(
-		VL53L7CX_Configuration		*p_dev,
-		uint8_t				*p_xtalk_data);
+	VL53L7CX_Configuration *p_dev,
+	uint8_t *p_xtalk_data);
 
 /**
  * @brief This function sets the Xtalk buffer. This function can be used to
@@ -79,8 +78,8 @@ uint8_t vl53l7cx_get_caldata_xtalk(
  */
 
 uint8_t vl53l7cx_set_caldata_xtalk(
-		VL53L7CX_Configuration		*p_dev,
-		uint8_t				*p_xtalk_data);
+	VL53L7CX_Configuration *p_dev,
+	uint8_t *p_xtalk_data);
 
 /**
  * @brief This function gets the Xtalk margin. This margin is used to increase
@@ -92,8 +91,8 @@ uint8_t vl53l7cx_set_caldata_xtalk(
  */
 
 uint8_t vl53l7cx_get_xtalk_margin(
-		VL53L7CX_Configuration		*p_dev,
-		uint32_t			*p_xtalk_margin);
+	VL53L7CX_Configuration *p_dev,
+	uint32_t *p_xtalk_margin);
 
 /**
  * @brief This function sets the Xtalk margin. This margin is used to increase
@@ -107,8 +106,8 @@ uint8_t vl53l7cx_get_xtalk_margin(
  */
 
 uint8_t vl53l7cx_set_xtalk_margin(
-		VL53L7CX_Configuration		*p_dev,
-		uint32_t			xtalk_margin);
+	VL53L7CX_Configuration *p_dev,
+	uint32_t xtalk_margin);
 
 /**
  * @brief Command used to get Xtalk calibration data
@@ -132,8 +131,7 @@ static const uint8_t VL53L7CX_GET_XTALK_CMD[] = {
 	0xA2, 0x6C, 0x00, 0x84,
 	0xA2, 0x8C, 0x00, 0x82,
 	0x00, 0x00, 0x00, 0x0F,
-	0x07, 0x02, 0x00, 0x44
-};
+	0x07, 0x02, 0x00, 0x44};
 
 /**
  * @brief Command used to get run Xtalk calibration
@@ -385,7 +383,6 @@ static const uint8_t VL53L7CX_CALIBRATE_XTALK[] = {
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x02,
 	0x00, 0x00, 0x00, 0x0F,
-	0x00, 0x01, 0x03, 0xD4
-};
+	0x00, 0x01, 0x03, 0xD4};
 
 #endif /* VL53L7CX_PLUGIN_XTALK_H_ */

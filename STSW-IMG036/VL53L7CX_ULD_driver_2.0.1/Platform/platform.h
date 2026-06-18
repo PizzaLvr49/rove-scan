@@ -1,14 +1,14 @@
 /**
-  *
-  * Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ *
+ * Copyright (c) 2021 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 
 #ifndef _PLATFORM_H_
 #define _PLATFORM_H_
@@ -30,7 +30,9 @@ typedef struct
 	/* To be filled with customer's platform. At least an I2C address/descriptor
 	 * needs to be added */
 	/* Example for most standard platform : I2C address of sensor */
-    uint16_t  			address;
+	uint16_t address;
+	// added this
+	void *i2c;
 
 } VL53L7CX_Platform;
 
@@ -41,7 +43,7 @@ typedef struct
  * zone means a lower RAM). The value must be between 1 and 4.
  */
 
-#define 	VL53L7CX_NB_TARGET_PER_ZONE		1U
+#define VL53L7CX_NB_TARGET_PER_ZONE 1U
 
 /*
  * @brief The macro below can be used to avoid data conversion into the driver.
@@ -77,9 +79,9 @@ typedef struct
  */
 
 uint8_t VL53L7CX_RdByte(
-		VL53L7CX_Platform *p_platform,
-		uint16_t RegisterAdress,
-		uint8_t *p_value);
+	VL53L7CX_Platform *p_platform,
+	uint16_t RegisterAdress,
+	uint8_t *p_value);
 
 /**
  * @brief Mandatory function used to write one single byte.
@@ -91,9 +93,9 @@ uint8_t VL53L7CX_RdByte(
  */
 
 uint8_t VL53L7CX_WrByte(
-		VL53L7CX_Platform *p_platform,
-		uint16_t RegisterAdress,
-		uint8_t value);
+	VL53L7CX_Platform *p_platform,
+	uint16_t RegisterAdress,
+	uint8_t value);
 
 /**
  * @brief Mandatory function used to read multiples bytes.
@@ -106,10 +108,10 @@ uint8_t VL53L7CX_WrByte(
  */
 
 uint8_t VL53L7CX_RdMulti(
-		VL53L7CX_Platform *p_platform,
-		uint16_t RegisterAdress,
-		uint8_t *p_values,
-		uint32_t size);
+	VL53L7CX_Platform *p_platform,
+	uint16_t RegisterAdress,
+	uint8_t *p_values,
+	uint32_t size);
 
 /**
  * @brief Mandatory function used to write multiples bytes.
@@ -122,10 +124,10 @@ uint8_t VL53L7CX_RdMulti(
  */
 
 uint8_t VL53L7CX_WrMulti(
-		VL53L7CX_Platform *p_platform,
-		uint16_t RegisterAdress,
-		uint8_t *p_values,
-		uint32_t size);
+	VL53L7CX_Platform *p_platform,
+	uint16_t RegisterAdress,
+	uint8_t *p_values,
+	uint32_t size);
 
 /**
  * @brief Optional function, only used to perform an hardware reset of the
@@ -138,7 +140,7 @@ uint8_t VL53L7CX_WrMulti(
  */
 
 uint8_t VL53L7CX_Reset_Sensor(
-		VL53L7CX_Platform *p_platform);
+	VL53L7CX_Platform *p_platform);
 
 /**
  * @brief Mandatory function, used to swap a buffer. The buffer size is always a
@@ -148,8 +150,8 @@ uint8_t VL53L7CX_Reset_Sensor(
  */
 
 void VL53L7CX_SwapBuffer(
-		uint8_t 		*buffer,
-		uint16_t 	 	 size);
+	uint8_t *buffer,
+	uint16_t size);
 /**
  * @brief Mandatory function, used to wait during an amount of time. It must be
  * filled as it's used into the API.
@@ -160,7 +162,7 @@ void VL53L7CX_SwapBuffer(
  */
 
 uint8_t VL53L7CX_WaitMs(
-		VL53L7CX_Platform *p_platform,
-		uint32_t TimeMs);
+	VL53L7CX_Platform *p_platform,
+	uint32_t TimeMs);
 
-#endif	// _PLATFORM_H_
+#endif // _PLATFORM_H_

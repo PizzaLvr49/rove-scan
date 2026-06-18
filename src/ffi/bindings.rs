@@ -12,13 +12,16 @@ pub const VL53L7CX_MAX_RESULTS_SIZE: u32 = 1452;
 #[derive(Debug, Copy, Clone)]
 pub struct VL53L7CX_Platform {
     pub address: u16,
+    pub i2c: *mut ::core::ffi::c_void,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-    ["Size of VL53L7CX_Platform"][::core::mem::size_of::<VL53L7CX_Platform>() - 2usize];
-    ["Alignment of VL53L7CX_Platform"][::core::mem::align_of::<VL53L7CX_Platform>() - 2usize];
+    ["Size of VL53L7CX_Platform"][::core::mem::size_of::<VL53L7CX_Platform>() - 8usize];
+    ["Alignment of VL53L7CX_Platform"][::core::mem::align_of::<VL53L7CX_Platform>() - 4usize];
     ["Offset of field: VL53L7CX_Platform::address"]
         [::core::mem::offset_of!(VL53L7CX_Platform, address) - 0usize];
+    ["Offset of field: VL53L7CX_Platform::i2c"]
+        [::core::mem::offset_of!(VL53L7CX_Platform, i2c) - 4usize];
 };
 #[doc = " @brief Structure VL53L7CX_Configuration contains the sensor configuration.\n User MUST not manually change these field, except for the sensor address."]
 #[repr(C)]
@@ -37,27 +40,27 @@ pub struct VL53L7CX_Configuration {
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
     ["Size of VL53L7CX_Configuration"]
-        [::core::mem::size_of::<VL53L7CX_Configuration>() - 2736usize];
+        [::core::mem::size_of::<VL53L7CX_Configuration>() - 2744usize];
     ["Alignment of VL53L7CX_Configuration"]
         [::core::mem::align_of::<VL53L7CX_Configuration>() - 4usize];
     ["Offset of field: VL53L7CX_Configuration::platform"]
         [::core::mem::offset_of!(VL53L7CX_Configuration, platform) - 0usize];
     ["Offset of field: VL53L7CX_Configuration::streamcount"]
-        [::core::mem::offset_of!(VL53L7CX_Configuration, streamcount) - 2usize];
+        [::core::mem::offset_of!(VL53L7CX_Configuration, streamcount) - 8usize];
     ["Offset of field: VL53L7CX_Configuration::data_read_size"]
-        [::core::mem::offset_of!(VL53L7CX_Configuration, data_read_size) - 4usize];
+        [::core::mem::offset_of!(VL53L7CX_Configuration, data_read_size) - 12usize];
     ["Offset of field: VL53L7CX_Configuration::default_configuration"]
-        [::core::mem::offset_of!(VL53L7CX_Configuration, default_configuration) - 8usize];
+        [::core::mem::offset_of!(VL53L7CX_Configuration, default_configuration) - 16usize];
     ["Offset of field: VL53L7CX_Configuration::default_xtalk"]
-        [::core::mem::offset_of!(VL53L7CX_Configuration, default_xtalk) - 12usize];
+        [::core::mem::offset_of!(VL53L7CX_Configuration, default_xtalk) - 20usize];
     ["Offset of field: VL53L7CX_Configuration::offset_data"]
-        [::core::mem::offset_of!(VL53L7CX_Configuration, offset_data) - 16usize];
+        [::core::mem::offset_of!(VL53L7CX_Configuration, offset_data) - 24usize];
     ["Offset of field: VL53L7CX_Configuration::xtalk_data"]
-        [::core::mem::offset_of!(VL53L7CX_Configuration, xtalk_data) - 504usize];
+        [::core::mem::offset_of!(VL53L7CX_Configuration, xtalk_data) - 512usize];
     ["Offset of field: VL53L7CX_Configuration::temp_buffer"]
-        [::core::mem::offset_of!(VL53L7CX_Configuration, temp_buffer) - 1280usize];
+        [::core::mem::offset_of!(VL53L7CX_Configuration, temp_buffer) - 1288usize];
     ["Offset of field: VL53L7CX_Configuration::is_auto_stop_enabled"]
-        [::core::mem::offset_of!(VL53L7CX_Configuration, is_auto_stop_enabled) - 2732usize];
+        [::core::mem::offset_of!(VL53L7CX_Configuration, is_auto_stop_enabled) - 2740usize];
 };
 #[doc = " @brief Structure VL53L7CX_ResultsData contains the ranging results of\n VL53L7CX. If user wants more than 1 target per zone, the results can be split\n into 2 sub-groups :\n - Per zone results. These results are common to all targets (ambient_per_spad\n , nb_target_detected and nb_spads_enabled).\n - Per target results : These results are different relative to the detected\n target (signal_per_spad, range_sigma_mm, distance_mm, reflectance,\n target_status)."]
 #[repr(C)]
