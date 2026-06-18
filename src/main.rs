@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+mod ffi;
+
 extern crate defmt_rtt;
 extern crate panic_probe;
 
