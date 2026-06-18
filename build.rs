@@ -69,6 +69,6 @@ fn main() {
     let bindings = bindgen_builder.generate().expect("bindgen failed");
 
     bindings
-        .write_to_file("src/ffi/bindings.rs")
+        .write_to_file("bindings.rs")
         .expect("could not write bindings");
 }
