@@ -24,14 +24,24 @@ fn main() {
     println!("cargo:rerun-if-changed={st_src}");
     println!("cargo:rerun-if-changed={st_plat}");
 
-    cc::Build::default()
+    let mut c_builder = cc::Build::default();
+
+    c_builder
         .file(format!("{st_src}/vl53l7cx_api.c"))
         .file(format!("{st_src}/vl53l7cx_plugin_detection_thresholds.c"))
         .file(format!("{st_src}/vl53l7cx_plugin_motion_indicator.c"))
         .file(format!("{st_src}/vl53l7cx_plugin_xtalk.c"))
         .include(st_inc)
-        .include(st_plat)
-        .compile("vl53l7cx");
+        .include(st_plat);
+
+    let profile = std::env::var("PROFILE").unwrap_or_default();
+    if profile == "release" {
+        c_builder.opt_level_str("s");
+    } else {
+        c_builder.opt_level(0);
+    }
+
+    c_builder.compile("vl53l7cx");
 
     let sysroot = std::process::Command::new("arm-none-eabi-gcc")
         .arg("-print-sysroot")
@@ -50,7 +60,8 @@ fn main() {
         .allowlist_function("vl53l7cx_.*")
         .allowlist_type("VL53L7CX_.*")
         .allowlist_var("VL53L7CX_.*")
-        .use_core();
+        .use_core()
+        .ctypes_prefix("core::ffi");
 
     if !sysroot.is_empty() {
         bindgen_builder = bindgen_builder.clang_arg(format!("-isystem{sysroot}/include"));
