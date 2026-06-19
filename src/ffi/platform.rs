@@ -10,34 +10,67 @@ pub struct VL53L7CX_Platform {
     pub i2c: *mut core::ffi::c_void,
 }
 
-/// # Safety
-/// - `p` must be a valid, aligned, non-null pointer to a live `VL53L7CX_Platform`.
-/// - `p.i2c` must point to a live `Bus` with no other outstanding mutable references
-///   for the duration of the returned borrow.
-/// - `p.address` must be an 8-bit I2C write address (LSB = 0, 7-bit value ≤ 0x7F).
-unsafe fn get<'a>(p: *mut VL53L7CX_Platform) -> (&'a mut Bus, u8) {
-    let p_ref = unsafe { &*p };
-    let bus = unsafe { &mut *p_ref.i2c.cast::<Bus>() };
-    let addr = u8::try_from(p_ref.address >> 1).expect("VL53L7CX I2C address exceeds 7-bit range");
-    (bus, addr)
+pub struct Vl53l7cxCtx<'a> {
+    bus: &'a mut Bus,
+    address: u8,
+}
+
+impl Vl53l7cxCtx<'_> {
+    /// Constructs a safe Rust context from the raw FFI platform struct.
+    ///
+    /// # Safety
+    /// - `p` must be a valid, aligned, non-null pointer to a live `VL53L7CX_Platform`.
+    /// - `p.i2c` must point to a live `Bus` with no other outstanding mutable references.
+    pub unsafe fn from_raw(p: *mut VL53L7CX_Platform) -> Self {
+        let p_ref = unsafe { &mut *p };
+        let bus = unsafe { &mut *p_ref.i2c.cast::<Bus>() };
+        let address =
+            u8::try_from(p_ref.address >> 1).expect("VL53L7CX I2C address exceeds 7-bit range");
+
+        Self { bus, address }
+    }
+
+    pub fn write_byte(&mut self, reg: u16, value: u8) -> Result<(), ()> {
+        let [reg_hi, reg_lo] = reg.to_be_bytes();
+        self.bus
+            .write(self.address, &[reg_hi, reg_lo, value])
+            .map_err(|_| ())
+    }
+
+    pub fn read_byte(&mut self, reg: u16, out: &mut u8) -> Result<(), ()> {
+        self.bus
+            .write_read(self.address, &reg.to_be_bytes(), core::slice::from_mut(out))
+            .map_err(|_| ())
+    }
+
+    pub fn write_multi(&mut self, reg: u16, data: &[u8]) -> Result<(), ()> {
+        self.bus
+            .transaction(
+                self.address,
+                &mut [Operation::Write(&reg.to_be_bytes()), Operation::Write(data)],
+            )
+            .map_err(|_| ())
+    }
+
+    pub fn read_multi(&mut self, reg: u16, out: &mut [u8]) -> Result<(), ()> {
+        self.bus
+            .write_read(self.address, &reg.to_be_bytes(), out)
+            .map_err(|_| ())
+    }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn VL53L7CX_WrByte(p: *mut VL53L7CX_Platform, reg: u16, value: u8) -> u8 {
-    let (bus, addr) = unsafe { get(p) };
-
-    let [reg_hi, reg_lo] = reg.to_be_bytes();
-
-    bus.write(addr, &[reg_hi, reg_lo, value]).map_or(1, |()| 0)
+    let mut ctx = unsafe { Vl53l7cxCtx::from_raw(p) };
+    ctx.write_byte(reg, value).map_or(1, |()| 0)
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn VL53L7CX_RdByte(p: *mut VL53L7CX_Platform, reg: u16, out: *mut u8) -> u8 {
-    let (bus, addr) = unsafe { get(p) };
-    let buf = unsafe { core::slice::from_raw_parts_mut(out, 1) };
+    let mut ctx = unsafe { Vl53l7cxCtx::from_raw(p) };
+    let out_ref = unsafe { &mut *out };
 
-    bus.write_read(addr, &reg.to_be_bytes(), buf)
-        .map_or(1, |()| 0)
+    ctx.read_byte(reg, out_ref).map_or(1, |()| 0)
 }
 
 #[unsafe(no_mangle)]
@@ -47,17 +80,10 @@ pub unsafe extern "C" fn VL53L7CX_WrMulti(
     data: *const u8,
     size: u32,
 ) -> u8 {
-    let (bus, addr) = unsafe { get(p) };
+    let mut ctx = unsafe { Vl53l7cxCtx::from_raw(p) };
     let payload = unsafe { core::slice::from_raw_parts(data, size as usize) };
 
-    bus.transaction(
-        addr,
-        &mut [
-            Operation::Write(&reg.to_be_bytes()),
-            Operation::Write(payload),
-        ],
-    )
-    .map_or(1, |()| 0)
+    ctx.write_multi(reg, payload).map_or(1, |()| 0)
 }
 
 #[unsafe(no_mangle)]
@@ -67,10 +93,10 @@ pub unsafe extern "C" fn VL53L7CX_RdMulti(
     out: *mut u8,
     size: u32,
 ) -> u8 {
-    let (bus, addr) = unsafe { get(p) };
+    let mut ctx = unsafe { Vl53l7cxCtx::from_raw(p) };
     let buf = unsafe { core::slice::from_raw_parts_mut(out, size as usize) };
-    bus.write_read(addr, &reg.to_be_bytes(), buf)
-        .map_or(1, |()| 0)
+
+    ctx.read_multi(reg, buf).map_or(1, |()| 0)
 }
 
 #[unsafe(no_mangle)]
@@ -80,7 +106,6 @@ pub unsafe extern "C" fn VL53L7CX_WaitMs(_p: *mut VL53L7CX_Platform, ms: u32) ->
 }
 
 /// No XSHUT pin is wired on this platform; non-zero tells the driver to fall
-/// back to a soft reset via register writes.  Wire up a GPIO here if needed.
 #[unsafe(no_mangle)]
 pub const unsafe extern "C" fn VL53L7CX_Reset_Sensor(_p: *mut VL53L7CX_Platform) -> u8 {
     1
@@ -88,12 +113,10 @@ pub const unsafe extern "C" fn VL53L7CX_Reset_Sensor(_p: *mut VL53L7CX_Platform)
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn VL53L7CX_SwapBuffer(buffer: *mut u8, size: u16) {
-    for i in 0..(size / 4) as usize {
-        unsafe {
-            let p = buffer.add(i * 4);
-            let bytes = p.cast::<[u8; 4]>().read_unaligned();
-            let swapped = u32::from_ne_bytes(bytes).swap_bytes().to_ne_bytes();
-            p.cast::<[u8; 4]>().write_unaligned(swapped);
-        }
+    let slice = unsafe { core::slice::from_raw_parts_mut(buffer, size as usize) };
+
+    for chunk in slice.chunks_exact_mut(4) {
+        let val = u32::from_ne_bytes(chunk.try_into().unwrap());
+        chunk.copy_from_slice(&val.swap_bytes().to_ne_bytes());
     }
 }
