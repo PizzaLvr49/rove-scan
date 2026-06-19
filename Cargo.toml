@@ -48,7 +48,7 @@ static_cell = "2.1.1"
 [build-dependencies]
 dotenvy = "0.15.7"
 bindgen = "0.72.1"
-cc = "1.2.64"
+cc = "1.2.65"
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
