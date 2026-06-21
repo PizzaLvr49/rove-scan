@@ -6,3 +6,4 @@ target = "thumbv8m.main-none-eabihf"
 
 [env]
 CC_thumbv8m_main_none_eabihf = "sccache arm-none-eabi-gcc"
+DEFMT_LOG = "info"

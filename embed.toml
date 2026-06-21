@@ -1,7 +1,0 @@
-[default.rtt]
-# Enable the RTT logging listener screen
-enabled = true
-
-[default.gdb]
-# Prevent GDB loops from hijacking the terminal
-enabled = false
