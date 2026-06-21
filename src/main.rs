@@ -17,7 +17,6 @@ use embassy_net::{
 };
 use embassy_rp::{
     bind_interrupts,
-    clocks::ClockConfig,
     config::Config,
     dma,
     gpio::{Level, Output},
@@ -64,9 +63,9 @@ async fn net_task(mut runner: embassy_net::Runner<'static, NetDriver<'static>>) 
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
-    let clock_config = unwrap!(ClockConfig::system_freq(250_000_000), "Clock init failed");
+    let p = embassy_rp::init(Config::default());
 
-    let p = embassy_rp::init(Config::new(clock_config));
+    info!("hello world");
 
     let mut rng = Trng::new(p.TRNG, Irqs, trng::Config::default());
 

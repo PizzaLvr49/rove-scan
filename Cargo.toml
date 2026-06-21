@@ -44,6 +44,7 @@ heapless = { version = "0.9.3", features = ["defmt", "embedded-io-v0.7"] }
 panic-probe = { version = "1.0.0", features = ["print-defmt"] }
 portable-atomic = { version = "1.13.1", features = ["critical-section"] }
 static_cell = "2.1.1"
+simple-fatfs = { git = "https://github.com/Oakchris1955/simple-fatfs", rev = "refs/pull/48/head", default-features = false, features = ["defmt"] }
 
 [build-dependencies]
 dotenvy = "0.15.7"
